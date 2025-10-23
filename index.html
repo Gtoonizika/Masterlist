@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Machine Detail • Masterlist</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --brand:#0b2a4f; --brand-2:#0f3a6d; --muted:#eef3fb; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
+      --bg-gradient: radial-gradient(1200px 500px at 20% -10%, #cfe5ff66, transparent), radial-gradient(1200px 500px at 80% 0%, #d5ffe466, transparent), linear-gradient(180deg,#f8fbff,#f1f5fb 40%,#f3f6fb);
+      --card-bg: rgba(255,255,255,.9);
+      --radius: 16px;
+      --shadow: 0 12px 30px rgba(2,6,23,.08);
+      --chip: #0ea5e9;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:'Sarabun', system-ui, Segoe UI, Roboto, sans-serif; color:#0f172a; background:var(--bg-gradient)}
+    .wrap{max-width:1120px; margin:24px auto; padding:0 16px}
+
+    /* Header card */
+    .hero{position:relative; overflow:hidden; border-radius:24px; background:linear-gradient(120deg,#0b2a4f,#155e75 50%,#1d4ed8); color:#e8f0ff; box-shadow:var(--shadow)}
+    .hero__inner{display:grid; grid-template-columns: 1.2fr .8fr; gap:16px; padding:22px}
+    .hero__left h1{margin:0; font-weight:700; font-size:28px; line-height:1.2}
+    .subtitle{opacity:.9; margin-top:6px}
+    .badge{display:inline-flex; align-items:center; gap:6px; font-size:12px; background:#e2e8f0; color:#0b2447; padding:4px 10px; border-radius:999px}
+    .chips{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+    .chip{font-size:12px; padding:6px 10px; border-radius:999px; background:#ffffff26; border:1px solid #93c5fd55}
+
+    .hero__right{display:flex; align-items:center; justify-content:flex-end}
+    .stat{display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:10px; width:100%}
+    .stat__box{background:#ffffff1a; border:1px solid #93c5fd55; border-radius:14px; padding:10px 12px; text-align:center}
+    .stat__label{font-size:12px; opacity:.9}
+    .stat__val{font-size:18px; font-weight:700; color:#e2f7ff}
+
+    /* Sections */
+    .grid{display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-top:16px}
+    .card{background:var(--card-bg); border:1px solid #e5e7eb; border-radius:var(--radius); box-shadow:var(--shadow)}
+    .card__hd{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px 14px; border-bottom:1px solid #eef2f7; background:linear-gradient(180deg,#f8fafc,#eef3fb)}
+    .card__title{font-weight:700; color:#0b2447}
+    .card__bd{padding:14px}
+
+    .rows{display:grid; grid-template-columns: 220px 1fr; gap:10px}
+    .k{color:#64748b}
+    .v{color:#0f172a; font-weight:600}
+    .note{font-size:13px; color:#64748b}
+
+    /* Footer actions */
+    .actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; margin-top:14px}
+    .btn{padding:10px 14px; border-radius:12px; border:1px solid #cbd5e1; background:#fff; cursor:pointer}
+    .btn.primary{background:var(--brand); color:#fff; border-color:#0c2f5e}
+    .btn.ghost{background:#fff}
+
+    .mini{display:inline-flex; gap:6px; align-items:center}
+    .mini .dot{width:8px; height:8px; border-radius:999px; background:var(--ok)}
+
+    /* error banner */
+    .banner{margin:12px 0; padding:10px 12px; border-radius:12px}
+    .banner.err{background:#fef2f2; border:1px solid #fecaca; color:#7f1d1d}
+
+    /* ===== Loading Overlay (spinner + text) ===== */
+    .loading-overlay{
+      position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+      background:rgba(255,255,255,.55); backdrop-filter:blur(6px); z-index:9999;
+    }
+    .loading-card{
+      display:flex; flex-direction:column; align-items:center; gap:12px;
+      background:rgba(255,255,255,.92); border:1px solid #e5e7eb; border-radius:16px;
+      padding:16px 18px; box-shadow:0 18px 40px rgba(2,6,23,.12);
+    }
+    .spinner{
+      width:36px; height:36px; border:4px solid #93c5fd; border-top-color:#1d4ed8;
+      border-radius:50%; animation:spin 1s linear infinite;
+    }
+    .loading-text{font-weight:700; color:#0b2447}
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 980px){
+      .hero__inner{grid-template-columns:1fr}
+      .stat{grid-template-columns: repeat(3,1fr)}
+      .grid{grid-template-columns:1fr}
+      .rows{grid-template-columns: 140px 1fr}
+    }
+    @media print{
+      body{background:#fff}
+      .hero{color:#0b2447; background:#fff; border:1px solid #e5e7eb}
+      .chip{border-color:#cbd5e1}
+      .btn, .actions, .loading-overlay, .banner{display:none !important}
+    }
+  </style>
+</head>
+<body>
+  <!-- โหลดแบบ overlay -->
+  <div id="loadingOverlay" class="loading-overlay" role="status" aria-live="polite" aria-busy="true">
+    <div class="loading-card">
+      <div class="spinner" aria-hidden="true"></div>
+      <div class="loading-text">กำลังโหลดข้อมูลเครื่องจักร…</div>
+    </div>
+  </div>
+
+  <div class="wrap" id="appRoot" aria-busy="false">
+    <!-- error banner -->
+    <div id="error" class="banner err" style="display:none"></div>
+
+    <!-- ========== HERO (หัวการ์ด) ========== -->
+    <section class="hero" aria-label="Machine summary">
+      <div class="hero__inner">
+        <div class="hero__left">
+          <h1 id="mName">Machine Name</h1>
+          <div class="subtitle" id="mCode">CODE-XXXX  •  <span id="mType">Type</span></div>
+          <div class="chips">
+            <span class="chip">Location: <strong id="mLoc">—</strong></span>
+            <span class="chip">P/A: <strong id="mPA">—</strong></span>
+            <span class="chip">Installed: <strong id="mInstall">—</strong></span>
+          </div>
+          <div style="margin-top:10px">
+            <span class="badge"><span class="mini"><span class="dot"></span> Active</span></span>
+          </div>
+        </div>
+        <div class="hero__right">
+          <div class="stat">
+            <div class="stat__box">
+              <div class="stat__label">Flow</div>
+              <div class="stat__val" id="sFlow">—</div>
+            </div>
+            <div class="stat__box">
+              <div class="stat__label">kW</div>
+              <div class="stat__val" id="sKW">—</div>
+            </div>
+            <div class="stat__box">
+              <div class="stat__label">Pressure</div>
+              <div class="stat__val" id="sPressure">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== BODY SECTIONS ========== -->
+    <section class="grid" style="margin-top:16px">
+      <!-- Identity -->
+      <article class="card" aria-label="Identity">
+        <div class="card__hd">
+          <div class="card__title">Identity</div>
+          <div class="note" id="idNote"></div>
+        </div>
+        <div class="card__bd">
+          <div class="rows">
+            <div class="k">Item</div><div class="v" id="vItem">—</div>
+            <div class="k">Code</div><div class="v" id="vCode">—</div>
+            <div class="k">Location</div><div class="v" id="vLoc">—</div>
+            <div class="k">Type</div><div class="v" id="vType">—</div>
+            <div class="k">P/A</div><div class="v" id="vPA">—</div>
+            <div class="k">Install Date</div><div class="v" id="vInstall">—</div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Motor -->
+      <article class="card" aria-label="Motor">
+        <div class="card__hd">
+          <div class="card__title">Motor</div>
+          <div class="note">ข้อมูลมอเตอร์</div>
+        </div>
+        <div class="card__bd">
+          <div class="rows">
+            <div class="k">Model Motor</div><div class="v" id="vModelMotor">—</div>
+            <div class="k">Type Motor</div><div class="v" id="vTypeMotor">—</div>
+            <div class="k">Serial no.Motor</div><div class="v" id="vSerialMotor">—</div>
+            <div class="k">kW</div><div class="v" id="vKW">—</div>
+            <div class="k">rpm</div><div class="v" id="vRPM">—</div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Pump -->
+      <article class="card" aria-label="Pump">
+        <div class="card__hd">
+          <div class="card__title">Pump</div>
+          <div class="note">ข้อมูลปั๊ม</div>
+        </div>
+        <div class="card__bd">
+          <div class="rows">
+            <div class="k">Model Pump</div><div class="v" id="vModelPump">—</div>
+            <div class="k">Type Pump</div><div class="v" id="vTypePump">—</div>
+            <div class="k">Serial no.Pump</div><div class="v" id="vSerialPump">—</div>
+            <div class="k">Flow</div><div class="v" id="vFlow">—</div>
+            <div class="k">Pressure</div><div class="v" id="vPressure">—</div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Brand / Make -->
+      <article class="card" aria-label="Brand">
+        <div class="card__hd">
+          <div class="card__title">Brand / Make</div>
+          <div class="note">รูปแบบ "Brand (P,M)"</div>
+        </div>
+        <div class="card__bd">
+          <div class="rows">
+            <div class="k">Brand (P,M)</div><div class="v" id="vBrand">—</div>
+          </div>
+          <div class="note" style="margin-top:8px" id="vBrandSplit"></div>
+        </div>
+      </article>
+    </section>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="btn ghost" id="btnCopy">Copy Code</button>
+      <button class="btn ghost" id="btnShare">Share Link</button>
+      <button class="btn primary" onclick="window.print()">พิมพ์ / บันทึกเป็น PDF</button>
+    </div>
+  </div>
+
+<script>
+/** ===== CONFIG: ตั้ง URL Apps Script ของคุณ ===== */
+const API_BASE = 'https://script.google.com/macros/s/AKfycbx-REzeb3NC4hkUyx7B7jX3-LmTIv3_nryiEW6wOn7Qxn42TLuRdX3jpBNxGp8ZVCGJ/exec';
+const USE_JSONP = false; // true = บังคับ JSONP (เผื่อเปิดจาก file:/// แล้ว CORS งอแง)
+
+const SAMPLE = {
+  "Item":"1","Code":"AIT-PUMP-001","Location":"AIT","Machine Name":"RO Feed Pump #1","Type":"Pump",
+  "Brand (P,M)":"EBARA / ABB","Model Motor":"M2BAX112","Type Motor":"Induction","Serial no.Motor":"M-112-001",
+  "Model Pump":"3M80-200","Type Pump":"Centrifugal","Serial no.Pump":"P-3M80-200-01",
+  "Flow":"12 m³/h","kw":"7.5","rpm":"2900","Pressure":"6 bar","P/A":"P","Install Date":"2023-05-12"
+};
+
+const $ = (id) => document.getElementById(id);
+const val = (v) => v!=null && String(v).trim()!=='' ? String(v) : '—';
+function setText(id, v){ const el = $(id); if(el) el.textContent = val(v); }
+function splitBrandPM(s){ const parts = String(s||'').split('/'); return parts.length===2 ? {pump:parts[0].trim(), motor:parts[1].trim()} : null; }
+
+/** ===== Hydrate (แสดงผล) ===== */
+function hydrate(MACHINE){
+  setText('mName', MACHINE['Machine Name']);
+  setText('mCode', MACHINE['Code']);
+  setText('mType', MACHINE['Type']);
+  setText('mLoc', MACHINE['Location']);
+  setText('mPA', MACHINE['P/A']);
+  setText('mInstall', MACHINE['Install Date']);
+  setText('sFlow', MACHINE['Flow']);
+  setText('sKW', MACHINE['kw']);
+  setText('sPressure', MACHINE['Pressure']);
+  setText('vItem', MACHINE['Item']);
+  setText('vCode', MACHINE['Code']);
+  setText('vLoc', MACHINE['Location']);
+  setText('vType', MACHINE['Type']);
+  setText('vPA', MACHINE['P/A']);
+  setText('vInstall', MACHINE['Install Date']);
+  setText('vModelMotor', MACHINE['Model Motor']);
+  setText('vTypeMotor', MACHINE['Type Motor']);
+  setText('vSerialMotor', MACHINE['Serial no.Motor']);
+  setText('vKW', MACHINE['kw']);
+  setText('vRPM', MACHINE['rpm']);
+  setText('vModelPump', MACHINE['Model Pump']);
+  setText('vTypePump', MACHINE['Type Pump']);
+  setText('vSerialPump', MACHINE['Serial no.Pump']);
+  setText('vFlow', MACHINE['Flow']);
+  setText('vPressure', MACHINE['Pressure']);
+  setText('vBrand', MACHINE['Brand (P,M)']);
+  const sp = splitBrandPM(MACHINE['Brand (P,M)']);
+  $('vBrandSplit').textContent = sp ? `Pump Brand: ${sp.pump}  |  Motor Brand: ${sp.motor}` : '';
+  setText('idNote', `${val(MACHINE['Code'])} • ${val(MACHINE['Location'])}`);
+}
+
+/** ===== Utils: อ่าน Code จาก URL ===== */
+function getCodeFromURL(){
+  const url = new URL(location.href);
+  const qsCode = url.searchParams.get('Code');
+  if (qsCode) return qsCode;
+  if (location.hash) {
+    const p = new URLSearchParams(location.hash.slice(1));
+    if (p.get('Code')) return p.get('Code');
+  }
+  return null;
+}
+
+/** ===== Loading / Error ===== */
+function showLoading(on){
+  const ov = $('loadingOverlay');
+  const app = $('appRoot');
+  ov.style.display = on ? 'flex' : 'none';
+  app.setAttribute('aria-busy', on ? 'true' : 'false');
+  // ปิดการกดปุ่มระหว่างโหลด
+  document.querySelectorAll('button').forEach(b => b.disabled = !!on);
+}
+function showError(msg){ const el=$('error'); el.textContent = msg||''; el.style.display = msg? '' : 'none'; }
+
+/** ===== Data load (fetch / JSONP) ===== */
+async function fetchDetail(code){
+  const api = `${API_BASE}?mode=detail&code=${encodeURIComponent(code)}`;
+  const r = await fetch(api);
+  if(!r.ok) throw new Error('API error');
+  return await r.json();
+}
+function jsonpDetail(code){
+  return new Promise((resolve,reject)=>{
+    const cb = `cb_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    window[cb] = (resp) => { resolve(resp); cleanup(); };
+    const s = document.createElement('script');
+    s.src = `${API_BASE}?mode=detail&code=${encodeURIComponent(code)}&callback=${cb}`;
+    s.onerror = () => { reject(new Error('JSONP error')); cleanup(); };
+    document.body.appendChild(s);
+    function cleanup(){ delete window[cb]; s.remove(); }
+  });
+}
+
+/** ===== Boot ===== */
+(async function init(){
+  $('btnCopy').addEventListener('click', async ()=>{
+    try{ await navigator.clipboard.writeText(($('vCode').textContent||'').trim()); alert('คัดลอก Code แล้ว'); }
+    catch{ alert('คัดลอกไม่สำเร็จ'); }
+  });
+  $('btnShare').addEventListener('click', async ()=>{
+    const url = new URL(location.href);
+    const code = ($('vCode').textContent||'').trim();
+    if(code) url.searchParams.set('Code', code);
+    try{ await navigator.clipboard.writeText(url.toString()); alert('คัดลอกลิงก์พร้อมข้อมูลแล้ว'); }
+    catch{ alert(url.toString()); }
+  });
+
+  const code = getCodeFromURL();
+  if(!code){
+    hydrate(SAMPLE);
+    showError('ไม่มีพารามิเตอร์ ?Code=... ในลิงก์ — แสดงตัวอย่างแทน');
+    return;
+  }
+
+  showLoading(true); showError('');
+  try{
+    let data;
+    if (USE_JSONP) data = await jsonpDetail(code);
+    else {
+      try { data = await fetchDetail(code); }
+      catch (e) { data = await jsonpDetail(code); } // auto fallback สำหรับ file://
+    }
+    if (data && data.ok && data.record){
+      hydrate(data.record);
+    } else if (data && data.error === 'not_found') {
+      showError(`ไม่พบ Code: ${code}`);
+      hydrate(SAMPLE);
+    } else {
+      showError('โหลดข้อมูลไม่สำเร็จ'); hydrate(SAMPLE);
+    }
+  } catch (err){
+    console.error(err);
+    showError('เชื่อมต่อ Apps Script ไม่ได้'); hydrate(SAMPLE);
+  } finally {
+    showLoading(false);
+  }
+})();
+</script>
+</body>
+</html>
